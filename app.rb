@@ -35,8 +35,12 @@ helpers do
     # which is suitable for streaming.
     options[:generator] = Temple::Generator
 
-    # We are already streaming, continue!
-    return super if @_out_buf.is_a? Sinatra::Helpers::Stream
+    # There is an output buffer present. We are already streaming, continue!
+    if @_out_buf
+      # Check if we are really streaming...
+      raise 'You are trying to stream from within a unstreamed layout' unless @_out_buf.is_a? Sinatra::Helpers::Stream
+      return super
+    end
 
     # Create a new stream
     stream do |out|
@@ -85,9 +89,6 @@ html
   head
     title Computing PI...
   body
-    h1
-      == slim :headline
-      == slim :ellipsis, stream: true
     = yield
 
 @@ headline
@@ -99,6 +100,9 @@ html
   = '.'
 
 @@ pi
+h1
+  == slim :headline
+  == slim :ellipsis, stream: true
 - i = 1
 - loop do
   = BigMath.PI(i).to_s('F')[i-1]
