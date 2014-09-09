@@ -15,7 +15,7 @@ class Debug < BasicObject
 end
 
 helpers do
-  def slim(template, options = {}, locals = {}, &block)
+  def render(engine, template, options = {}, locals = {}, &block)
     # Slim calls the option :streaming, but Sinatra has a #stream method
     # so we also support the :stream option.
     options[:streaming] ||= options.delete(:stream)
@@ -31,9 +31,15 @@ helpers do
       end
     end
 
-    # We use the Temple generator without preamble and postamble
-    # which is suitable for streaming.
-    options[:generator] = Temple::Generator
+    # Engine specific stuff, currently only :slim
+    case engine
+    when :slim
+      # We use the Temple generator without preamble and postamble
+      # which is suitable for streaming.
+      options[:generator] = Temple::Generator
+    else
+      raise "Streaming is not supported for #{engine}"
+    end
 
     # There is an output buffer present. We are already streaming, continue!
     if @_out_buf
@@ -54,8 +60,8 @@ helpers do
         layout = options[:layout] == nil || options[:layout] == true ? :layout : options[:layout]
 
         # Invert layout and template rendering order
-        super layout, options.merge(layout: false), locals do
-          super(template, options.merge(layout: false), locals, &block)
+        super engine, layout, options.merge(layout: false), locals do
+          super engine, template, options.merge(layout: false), locals, &block
         end
       end
     end
