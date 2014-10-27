@@ -20,16 +20,8 @@ helpers do
     # so we also support the :stream option.
     options[:streaming] ||= options.delete(:stream)
 
-    # We are not streaming. Call super implementation and
-    # just ensure that the @_out_buf is restored afterwards.
-    unless options[:streaming]
-      old = @_out_buf
-      begin
-        return super
-      ensure
-        @_out_buf = old
-      end
-    end
+    # We are not streaming. Call super implementation
+    return super unless options[:streaming]
 
     # Engine specific stuff, currently only :slim
     case engine
